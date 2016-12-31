@@ -1,3 +1,6 @@
+<p align="right">
+<img src="https://travis-ci.org/googlei18n/libphonenumber.svg?branch=master">
+</p>
 # What is it?
 
 Google's common Java, C++ and JavaScript library for parsing, formatting, and validating international phone numbers. The Java version is optimized for running on smartphones, and is used by the Android framework since 4.0 (Ice Cream Sandwich).
@@ -17,7 +20,7 @@ If you want to report an issue, or to contribute to the project, please read the
   * ` PhoneNumberOfflineGeocoder ` - provides geographical information related to a phone number.
   * ` PhoneNumberToCarrierMapper ` - provides carrier information related to a phone number.
 
-# Demo (v7.2.5)
+# Demo (v8.0.0)
 [Java](http://libphonenumber.appspot.com/)
 
 [JavaScript](https://rawgit.com/googlei18n/libphonenumber/master/javascript/i18n/phonenumbers/demo-compiled.html)
@@ -27,11 +30,46 @@ To include the code in your application, either integrate with Maven or download
 
 http://repo1.maven.org/maven2/com/googlecode/libphonenumber/libphonenumber/
 
+# Versioning and Announcements
+
+We generally choose the release number following these guidelines.
+
+If any of the changes pushed to master since the last release are incompatible
+with the intent / specification of an existing libphonenumber API or may cause
+libphonenumber (Java, C++, or JS) clients to have to change their code to keep
+building, we publish a major release. For example, if the last release were
+7.7.3, the new one would be 8.0.0.
+
+If any of those changes *enable* clients to update their code to take advantage
+of new functionality, we publish a minor release. So we'd go from 7.7.3 to
+7.8.0.
+
+Otherwise, including when a release contains only [metadata]
+(http://github.com/googlei18n/libphonenumber/blob/master/FAQ.md#metadata_definition)
+changes, we publish a sub-minor release, e.g. 7.7.3 to 7.7.4.
+
+Sometimes we make internal changes to the code or metadata that, while not
+affecting compatibility for clients, could affect compatibility for **porters**
+of the library. For such changes we make announcements to
+[libphonenumber-discuss]
+(http://groups.google.com/forum/#!forum/libphonenumber-discuss). Such changes
+are not reflected in the version number, and we would publish a sub-minor
+release if there were no other changes.
+
+Want to get notified of new releases? During most of the year, excepting
+holidays and extenuating circumstances, we release fortnightly. We update
+[release tags](http://github.com/googlei18n/libphonenumber/releases) and
+document detailed [release notes]
+(http://github.com/googlei18n/libphonenumber/blob/master/java/release_notes.txt).
+We also send an announcement to [libphonenumber-discuss]
+(http://groups.google.com/forum/#!forum/libphonenumber-discuss) for every
+release.
+
 # Quick Examples
 Let's say you have a string representing a phone number from Switzerland. This is how you parse/normalize it into a ` PhoneNumber ` object:
 
 ```java
-String swissNumberStr = "044 668 18 00"
+String swissNumberStr = "044 668 18 00";
 PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
 try {
   PhoneNumber swissNumberProto = phoneUtil.parse(swissNumberStr, "CH");
@@ -48,7 +86,7 @@ At this point, swissNumberProto contains:
 }
 ```
 
-` PhoneNumber ` is a class that is auto-generated from the phonenumber.proto with necessary modifications for efficiency. For details on the meaning of each field, refer to https://github.com/googlei18n/test/blob/master/resources/phonenumber.proto
+` PhoneNumber ` is a class that is auto-generated from the phonenumber.proto with necessary modifications for efficiency. For details on the meaning of each field, refer to https://github.com/googlei18n/libphonenumber/blob/master/resources/phonenumber.proto
 
 Now let us validate whether the number is valid:
 ```java
@@ -105,11 +143,10 @@ System.out.println(carrierMapper.getNameForNumber(swissMobileNumber, Locale.ENGL
 ---
 
 
-More examples on how to use the library can be found in the unittests at https://github.com/googlei18n/test/tree/master/java/libphonenumber/test/com/google/i18n/phonenumbers
+More examples on how to use the library can be found in the unittests at https://github.com/googlei18n/libphonenumber/tree/master/java/libphonenumber/test/com/google/i18n/phonenumbers
 
 # Known Ports
 Several people are porting the phone number library to other languages. Here are some we know about. Note that they are done on voluntary basis by developers outside our project, so we cannot guarantee their quality.
-  * C#: https://github.com/erezak/libphonenumber-csharp
   * objective-c: https://github.com/iziz/libPhoneNumber-iOS
   * Python: https://github.com/daviddrysdale/python-phonenumbers
   * Ruby: https://github.com/sstephenson/global_phone

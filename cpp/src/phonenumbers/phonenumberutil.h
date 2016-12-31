@@ -386,6 +386,12 @@ class PhoneNumberUtil : public Singleton<PhoneNumberUtil> {
   // Tests whether a phone number matches a valid pattern. Note this doesn't
   // verify the number is actually in use, which is impossible to tell by just
   // looking at a number itself.
+  // It only verifies whether the parsed, canonicalised number is valid: not
+  // whether a particular series of digits entered by the user is diallable from
+  // the region provided when parsing. For example, the number +41 (0) 78 927
+  // 2696 can be parsed into a number with country code "41" and national
+  // significant number "789272696". This is valid, while the original string
+  // is not diallable.
   bool IsValidNumber(const PhoneNumber& number) const;
 
   // Tests whether a phone number is valid for a certain region. Note this
@@ -489,12 +495,38 @@ class PhoneNumberUtil : public Singleton<PhoneNumberUtil> {
       const string& number,
       const string& region_dialing_from) const;
 
+  // Tests whether a phone number has a geographical association. It checks if
+  // the number is associated to a certain region in the country where it
+  // belongs to. Note that this doesn't verify if the number is actually in use.
+  bool IsNumberGeographical(const PhoneNumber& phone_number) const;
+
+  // Tests whether a phone number has a geographical association, as represented
+  // by its type and the country it belongs to.
+  //
+  // This version of IsNumberGeographical exists since calculating the phone
+  // number type is expensive; if we have already done this, we don't want to do
+  // it again.
+  bool IsNumberGeographical(PhoneNumberType phone_number_type,
+                            int country_calling_code) const;
+
   // Gets a valid fixed-line number for the specified region. Returns false if
   // the region was unknown, or the region 001 is passed in. For 001
   // (representing non-geographical numbers), call
   // GetExampleNumberForNonGeoEntity instead.
   bool GetExampleNumber(const string& region_code,
                         PhoneNumber* number) const;
+
+  // Gets an invalid number for the specified region. This is useful for
+  // unit-testing purposes, where you want to test that will happen with an
+  // invalid number. Note that the number that is returned will always be able
+  // to be parsed and will have the correct country code. It may also be a valid
+  // *short* number/code for this region. Validity checking such
+  // numbers is handled with ShortNumberInfo.
+  //
+  // Returns false when an unsupported region or the region 001 (Earth) is
+  // passed in.
+  bool GetInvalidExampleNumber(const string& region_code,
+                               PhoneNumber* number) const;
 
   // Gets a valid number of the specified type for the specified region.
   // Returns false if the region was unknown or 001, or if no example number of
@@ -504,6 +536,13 @@ class PhoneNumberUtil : public Singleton<PhoneNumberUtil> {
                                PhoneNumberType type,
                                PhoneNumber* number) const;
 
+  // Gets a valid number for the specified type (it may belong to any country).
+  // Returns false when the metadata does not contain such information.  This
+  // should only happen when no numbers of this type are allocated anywhere in
+  // the world anymore.
+  bool GetExampleNumberForType(PhoneNumberType type,
+                               PhoneNumber* number) const;
+
   // Gets a valid number for the specified country calling code for a
   // non-geographical entity. Returns false if the metadata does not contain
   // such information, or the country calling code passed in does not belong to
@@ -511,10 +550,19 @@ class PhoneNumberUtil : public Singleton<PhoneNumberUtil> {
   bool GetExampleNumberForNonGeoEntity(
       int country_calling_code, PhoneNumber* number) const;
 
-  // Parses a string and returns it in proto buffer format. This method will
-  // return an error like INVALID_COUNTRY_CODE if the number is not considered
-  // to be a possible number, and NO_PARSING_ERROR if it parsed correctly. Note
-  // that validation of whether the number is actually a valid number for a
+  // Parses a string and returns it as a phone number in proto buffer format.
+  // The method is quite lenient and looks for a number in the input text
+  // (raw input) and does not check whether the string is definitely only a
+  // phone number. To do this, it ignores punctuation and white-space, as well
+  // as any text before the number (e.g. a leading “Tel: ”) and trims the
+  // non-number bits. It will accept a number in any format (E164, national,
+  // international etc), assuming it can be interpreted with the defaultRegion
+  // supplied. It also attempts to convert any alpha characters into digits
+  // if it thinks this is a vanity number of the type "1800 MICROSOFT".
+  //
+  // This method will return an error if the number is not considered to be a
+  // possible number, and NO_PARSING_ERROR if it parsed correctly.
+  // Note that validation of whether the number is actually a valid number for a
   // particular region is not performed. This can be done separately with
   // IsValidNumber().
   //
@@ -526,6 +574,11 @@ class PhoneNumberUtil : public Singleton<PhoneNumberUtil> {
   // stored as that of the default country supplied. If the number is guaranteed
   // to start with a '+' followed by the country calling code, then
   // "ZZ" can be supplied.
+  //
+  // Returns an error if the string is not considered to be a viable phone
+  // number (e.g.too few or too many digits) or if no default region was
+  // supplied and the number is not in international format (does not
+  // start with +).
   ErrorType Parse(const string& number_to_parse,
                   const string& default_region,
                   PhoneNumber* number) const;
@@ -685,11 +738,6 @@ class PhoneNumberUtil : public Singleton<PhoneNumberUtil> {
 
   // Trims unwanted end characters from a phone number string.
   void TrimUnwantedEndChars(string* number) const;
-
-  // Tests whether a phone number has a geographical association. It checks if
-  // the number is associated to a certain region in the country where it
-  // belongs to. Note that this doesn't verify if the number is actually in use.
-  bool IsNumberGeographical(const PhoneNumber& phone_number) const;
 
   // Helper function to check region code is not unknown or null.
   bool IsValidRegionCode(const string& region_code) const;
